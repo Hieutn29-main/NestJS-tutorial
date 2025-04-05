@@ -1,14 +1,22 @@
-declare const module: any;
-
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { Callback, Context, Handler } from 'aws-lambda';
+import * as serverless from 'serverless-http'; // ✔️ dùng import dạng namespace
+import { ExpressAdapter } from '@nestjs/platform-express';
+import * as express from 'express';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
-  if (module.hot) {
-    module.hot.accept();
-    module.hot.dispose(() => app.close());
-  }
-}
+const expressApp = express();
+
+const bootstrap = async () => {
+  const app = await NestFactory.create(
+    AppModule,
+    new ExpressAdapter(expressApp),
+  );
+  await app.init();
+};
+
 bootstrap();
+
+export const handler: Handler = serverless(expressApp);
